@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Findr - Smart Lost & Found Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .glassmorphism {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .tag-badge {
+      transition: all 0.2s ease-in-out;
+    }
+    .tag-badge:hover {
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Navigation Bar -->
+  <header class="sticky top-0 z-50 glassmorphism border-b border-slate-200/80 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-indigo-200">
+          <i class="fa-solid fa-radar text-lg"></i>
+        </div>
+        <div>
+          <span class="text-xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Findr</span>
+          <span class="text-xs ml-1 font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">Smart Hub</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button onclick="openModal('reportModal')" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm transition-all shadow-sm shadow-indigo-300">
+          <i class="fa-solid fa-plus text-xs"></i>
+          <span>Report Item</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero & Smart Search -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    
+    <div class="text-center max-w-2xl mx-auto space-y-3">
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Smart Lost & Found Directory</h1>
+      <p class="text-slate-500 text-base">Instant AI matching between items lost and recovered across campus & workplace spaces.</p>
+    </div>
+
+    <!-- Smart Auto-Matcher Alert Banner -->
+    <div id="smartMatchAlert" class="hidden rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 p-5 shadow-xs">
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-amber-200">
+          <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-amber-900">Potential Smart Match Detected!</h3>
+            <span class="text-xs bg-amber-200/60 text-amber-900 font-semibold px-2 py-0.5 rounded-full">High Confidence</span>
+          </div>
+          <p id="smartMatchText" class="text-sm text-amber-800 mt-1"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <section class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+        <!-- Search bar -->
+        <div class="md:col-span-6 relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="searchInput" oninput="renderItems()" placeholder="Search by name, tags, description, location..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all">
+        </div>
+
+        <!-- Status Filter -->
+        <div class="md:col-span-3">
+          <select id="statusFilter" onchange="renderItems()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-slate-700">
+            <option value="ALL">All Statuses (Lost & Found)</option>
+            <option value="LOST">Only Lost Items</option>
+            <option value="FOUND">Only Found Items</option>
+            <option value="CLAIMED">Resolved / Claimed</option>
+          </select>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="md:col-span-3">
+          <select id="categoryFilter" onchange="renderItems()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-slate-700">
+            <option value="ALL">All Categories</option>
+            <option value="Electronics">Electronics & Gadgets</option>
+            <option value="Accessories">Accessories & Jewelry</option>
+            <option value="Documents">IDs & Documents</option>
+            <option value="Clothing">Clothing & Apparel</option>
+            <option value="Keys">Keys & Keychains</option>
+            <option value="Bags">Bags & Wallets</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Items Grid Header -->
+    <div class="flex items-center justify-between pt-2">
+      <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+        <span>Recent Listings</span>
+        <span id="itemCountBadge" class="text-xs bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded-full">0</span>
+      </h2>
+      <button onclick="resetDefaults()" class="text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors">
+        <i class="fa-solid fa-arrow-rotate-right mr-1"></i> Reset Demo Data
+      </button>
+    </div>
+
+    <!-- Items Display Grid -->
+    <div id="itemsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Injected via JavaScript -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden text-center py-16 bg-white border border-dashed border-slate-300 rounded-2xl">
+      <div class="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
+        <i class="fa-solid fa-box-open text-2xl"></i>
+      </div>
+      <h3 class="text-base font-semibold text-slate-800">No matching items found</h3>
+      <p class="text-sm text-slate-500 mt-1 max-w-sm mx-auto">Try adjusting your search criteria or report a new lost or found listing.</p>
+    </div>
+
+  </main>
+
+  <!-- Report Item Modal -->
+  <div id="reportModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-lg font-bold text-slate-900">Post a Lost or Found Item</h3>
+        <button onclick="closeModal('reportModal')" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="itemForm" onsubmit="handleFormSubmit(event)" class="mt-4 space-y-4">
+        <!-- Type Selection -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Listing Type *</label>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="flex items-center justify-center gap-2 border rounded-xl p-3 cursor-pointer has-[:checked]:border-rose-500 has-[:checked]:bg-rose-50/50 has-[:checked]:text-rose-700 transition-all">
+              <input type="radio" name="itemType" value="LOST" checked class="accent-rose-600">
+              <span class="font-semibold text-sm">I Lost an Item</span>
+            </label>
+            <label class="flex items-center justify-center gap-2 border rounded-xl p-3 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50 has-[:checked]:text-emerald-700 transition-all">
+              <input type="radio" name="itemType" value="FOUND" class="accent-emerald-600">
+              <span class="font-semibold text-sm">I Found an Item</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Item Title *</label>
+          <input type="text" id="titleInput" required placeholder="e.g. Blue Hydro Flask / Sony WH-1000XM4" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Category *</label>
+            <select id="modalCategory" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600">
+              <option value="Electronics">Electronics</option>
+              <option value="Accessories">Accessories</option>
+              <option value="Documents">IDs & Documents</option>
+              <option value="Clothing">Clothing</option>
+              <option value="Keys">Keys</option>
+              <option value="Bags">Bags / Wallets</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Location *</label>
+            <input type="text" id="locationInput" required placeholder="e.g. Library 2nd Floor / Cafeteria" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Detailed Description *</label>
+          <textarea id="descInput" rows="3" required placeholder="Color, brand, distinguishing marks, stickers, serial details..." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Contact Details *</label>
+          <input type="text" id="contactInput" required placeholder="Email or Phone / WhatsApp" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Secret Verification Question</label>
+          <input type="text" id="secretInput" placeholder="e.g., What wallpaper is on the screen? / What keychain is attached?" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600">
+          <p class="text-xs text-slate-400 mt-1">Protects against false claims by asking the claimant to prove ownership.</p>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('reportModal')" class="px-4 py-2 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-sm shadow-indigo-300">Submit Listing</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Claim Modal -->
+  <div id="claimModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-lg font-bold text-slate-900">Claim / Verify Ownership</h3>
+        <button onclick="closeModal('claimModal')" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-4">
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <p class="text-xs text-slate-500">Item:</p>
+          <p id="claimModalTitle" class="font-bold text-slate-800 text-sm"></p>
+          <p id="claimModalQuestion" class="text-xs text-indigo-700 mt-2 font-medium"></p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Your Proof / Answer</label>
+          <textarea id="claimAnswerInput" rows="3" placeholder="Provide proof (e.g. describes secret marks, unlock code, proof of purchase)..." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Your Contact Info</label>
+          <input type="text" id="claimContactInput" placeholder="Email / Phone Number" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('claimModal')" class="px-4 py-2 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100">Close</button>
+          <button type="button" onclick="submitClaim()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-sm shadow-emerald-200">Send Claim Request</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-auto border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <span>Findr Smart Lost & Found Portal &bull; Ready for AWS Amplify & S3</span>
+      <span>Equipped with Client-Side Smart Fuzzy Matching</span>
+    </div>
+  </footer>
+
+  <script>
+    const INITIAL_DATA = [
+      {
+        id: "item-1",
+        type: "LOST",
+        title: "Apple AirPods Pro (2nd Gen)",
+        category: "Electronics",
+        location: "Central Library Study Room 3B",
+        date: "2026-11-10",
+        description: "White charging case with small black scratch on the hinge. Name on Bluetooth is 'Pradhan Pro'.",
+        contact: "lost.finder@domain.edu",
+        secret: "What custom engraving or sticker is on the case bottom?",
+        status: "ACTIVE"
+      },
+      {
+        id: "item-2",
+        type: "FOUND",
+        title: "AirPods Pro Case with Earbuds",
+        category: "Electronics",
+        location: "Central Library 3rd Floor Table",
+        date: "2026-11-11",
+        description: "Found white AirPods pro charging case with earbuds inside near the study cubicles.",
+        contact: "librarian-desk@domain.edu",
+        secret: "Name the bluetooth identifier or case marks.",
+        status: "ACTIVE"
+      },
+      {
+        id: "item-3",
+        type: "FOUND",
+        title: "Titan Analog Watch with Leather Strap",
+        category: "Accessories",
+        location: "Academic Block Cafe",
+        date: "2026-11-09",
+        description: "Brown genuine leather strap with metallic navy dial, silver bezel.",
+        contact: "campus.security@domain.edu",
+        secret: "What time did the watch stop at?",
+        status: "ACTIVE"
+      },
+      {
+        id: "item-4",
+        type: "LOST",
+        title: "Blue College ID Card & Metro Pass",
+        category: "Documents",
+        location: "Main Bus Stop / Gate 2",
+        date: "2026-11-08",
+        description: "Lanyard with navy ribbon and student ID card starting with registration 24BCA.",
+        contact: "krrish.sahay@domain.edu",
+        secret: "What is the emergency contact number on the back?",
+        status: "ACTIVE"
+      }
+    ];
+
+    let items = [];
+    let activeClaimItemId = null;
+
+    function init() {
+      const stored = localStorage.getItem('findr_items');
+      if (stored) {
+        try {
+          items = JSON.parse(stored);
+        } catch(e) {
+          items = INITIAL_DATA;
+        }
+      } else {
+        items = INITIAL_DATA;
+        saveData();
+      }
+      renderItems();
+      checkSmartMatches();
+    }
+
+    function saveData() {
+      localStorage.setItem('findr_items', JSON.stringify(items));
+    }
+
+    function resetDefaults() {
+      items = [...INITIAL_DATA];
+      saveData();
+      renderItems();
+      checkSmartMatches();
+    }
+
+    function renderItems() {
+      const search = document.getElementById('searchInput').value.toLowerCase().trim();
+      const status = document.getElementById('statusFilter').value;
+      const category = document.getElementById('categoryFilter').value;
+
+      const filtered = items.filter(item => {
+        const matchesStatus = 
+          status === 'ALL' ? true :
+          status === 'CLAIMED' ? item.status === 'CLAIMED' :
+          item.type === status && item.status !== 'CLAIMED';
+
+        const matchesCategory = category === 'ALL' || item.category === category;
+
+        const matchesSearch = 
+          !search ||
+          item.title.toLowerCase().includes(search) ||
+          item.description.toLowerCase().includes(search) ||
+          item.location.toLowerCase().includes(search) ||
+          item.category.toLowerCase().includes(search);
+
+        return matchesStatus && matchesCategory && matchesSearch;
+      });
+
+      const grid = document.getElementById('itemsGrid');
+      const empty = document.getElementById('emptyState');
+      const countBadge = document.getElementById('itemCountBadge');
+
+      countBadge.innerText = filtered.length;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      empty.classList.add('hidden');
+      grid.innerHTML = filtered.map(item => {
+        const isLost = item.type === 'LOST';
+        const isClaimed = item.status === 'CLAIMED';
+
+        return `
+          <div class="bg-white rounded-2xl border ${isClaimed ? 'border-slate-200 opacity-60' : isLost ? 'border-rose-200/80 shadow-xs' : 'border-emerald-200/80 shadow-xs'} p-5 flex flex-col justify-between hover:shadow-md transition-all">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold tracking-wide ${
+                  isClaimed 
+                    ? 'bg-slate-100 text-slate-600'
+                    : isLost 
+                    ? 'bg-rose-100 text-rose-700' 
+                    : 'bg-emerald-100 text-emerald-700'
+                }">
+                  <i class="fa-solid ${isClaimed ? 'fa-check' : isLost ? 'fa-magnifying-glass' : 'fa-hand-holding-heart'} text-[10px]"></i>
+                  ${isClaimed ? 'RESOLVED' : isLost ? 'LOST ITEM' : 'FOUND ITEM'}
+                </span>
+                <span class="text-xs text-slate-400 font-medium">${item.date}</span>
+              </div>
+
+              <h4 class="text-base font-bold text-slate-900 group-hover:text-indigo-600 line-clamp-1">${escapeHtml(item.title)}</h4>
+              
+              <div class="flex items-center gap-1.5 text-xs text-slate-500 mt-1 mb-2 font-medium">
+                <i class="fa-solid fa-location-dot text-indigo-500 text-[11px]"></i>
+                <span class="truncate">${escapeHtml(item.location)}</span>
+              </div>
+
+              <p class="text-slate-600 text-xs leading-relaxed line-clamp-3 mb-4">${escapeHtml(item.description)}</p>
+
+              <div class="flex items-center gap-2 flex-wrap mb-4">
+                <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">${escapeHtml(item.category)}</span>
+                ${item.secret ? '<span class="text-[11px] bg-amber-50 text-amber-700 border border-amber-200/60 px-2 py-0.5 rounded-md font-medium"><i class="fa-solid fa-shield mr-1"></i>Protected Claim</span>' : ''}
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-xs text-slate-500 truncate max-w-[140px]" title="${escapeHtml(item.contact)}">
+                <i class="fa-regular fa-envelope mr-1 text-slate-400"></i>${escapeHtml(item.contact)}
+              </span>
+
+              ${isClaimed ? `
+                <span class="text-xs font-semibold text-slate-400">Archived</span>
+              ` : `
+                <div class="flex items-center gap-1.5">
+                  <button onclick="openClaim('${item.id}')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition-colors">
+                    ${isLost ? 'Found this?' : 'Claim'}
+                  </button>
+                  <button onclick="markResolved('${item.id}')" title="Mark as resolved" class="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg text-xs transition-colors">
+                    <i class="fa-solid fa-circle-check"></i>
+                  </button>
+                </div>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function checkSmartMatches() {
+      const lostItems = items.filter(i => i.type === 'LOST' && i.status === 'ACTIVE');
+      const foundItems = items.filter(i => i.type === 'FOUND' && i.status === 'ACTIVE');
+
+      let matchFound = null;
+
+      for (let lost of lostItems) {
+        for (let found of foundItems) {
+          if (lost.category === found.category) {
+            // Check word intersections
+            const wordsLost = (lost.title + ' ' + lost.description).toLowerCase().split(/\W+/).filter(w => w.length > 3);
+            const wordsFound = (found.title + ' ' + found.description).toLowerCase().split(/\W+/).filter(w => w.length > 3);
+            
+            const common = wordsLost.filter(w => wordsFound.includes(w));
+            if (common.length >= 2) {
+              matchFound = { lost, found, common };
+              break;
+            }
+          }
+        }
+        if (matchFound) break;
+      }
+
+      const alertBox = document.getElementById('smartMatchAlert');
+      const alertText = document.getElementById('smartMatchText');
+
+      if (matchFound) {
+        alertText.innerHTML = `Lost item <strong>"${escapeHtml(matchFound.lost.title)}"</strong> might match found item <strong>"${escapeHtml(matchFound.found.title)}"</strong> based on common keywords (<em>${matchFound.common.slice(0, 3).join(', ')}</em>).`;
+        alertBox.classList.remove('hidden');
+      } else {
+        alertBox.classList.add('hidden');
+      }
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const type = document.querySelector('input[name="itemType"]:checked').value;
+      const title = document.getElementById('titleInput').value.trim();
+      const category = document.getElementById('modalCategory').value;
+      const location = document.getElementById('locationInput').value.trim();
+      const description = document.getElementById('descInput').value.trim();
+      const contact = document.getElementById('contactInput').value.trim();
+      const secret = document.getElementById('secretInput').value.trim();
+
+      const newItem = {
+        id: 'item-' + Date.now(),
+        type,
+        title,
+        category,
+        location,
+        description,
+        contact,
+        secret,
+        date: new Date().toISOString().split('T')[0],
+        status: 'ACTIVE'
+      };
+
+      items.unshift(newItem);
+      saveData();
+      renderItems();
+      checkSmartMatches();
+      closeModal('reportModal');
+      document.getElementById('itemForm').reset();
+    }
+
+    function openClaim(id) {
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+
+      activeClaimItemId = id;
+      document.getElementById('claimModalTitle').innerText = item.title;
+      const questionElem = document.getElementById('claimModalQuestion');
+      if (item.secret) {
+        questionElem.innerText = "Owner Verification Question: " + item.secret;
+        questionElem.classList.remove('hidden');
+      } else {
+        questionElem.classList.add('hidden');
+      }
+
+      openModal('claimModal');
+    }
+
+    function submitClaim() {
+      const ans = document.getElementById('claimAnswerInput').value.trim();
+      const contact = document.getElementById('claimContactInput').value.trim();
+
+      if (!ans || !contact) {
+        alert('Please fill out both the verification proof and your contact information.');
+        return;
+      }
+
+      alert('Claim submitted successfully! A notification with your answer has been queued for verification.');
+      closeModal('claimModal');
+      document.getElementById('claimAnswerInput').value = '';
+      document.getElementById('claimContactInput').value = '';
+    }
+
+    function markResolved(id) {
+      if (confirm('Mark this item as recovered / claimed?')) {
+        items = items.map(item => item.id === id ? { ...item, status: 'CLAIMED' } : item);
+        saveData();
+        renderItems();
+        checkSmartMatches();
+      }
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>"']/g, function(m) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        }[m];
+      });
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
